@@ -301,23 +301,28 @@ flowchart TD
 | Automated Evaluator | `tests/` | pytest runs 10 tests that validate retriever correctness and scorer output |
 | Human Evaluator | — | You run the app, read the printed results, and decide whether to adjust weights or add songs |
 
-- Reliability & Testing Summary:
-    - **Automated tests:** 10 unit tests across `test_retriever.py` (8 tests) and `test_recommender.py` (2 tests) — all passing. Tests cover candidate count, genre surfacing, Jaccard ordering, edge cases (empty genre, out-of-range inputs), and scorer output.
-    - **Confidence scoring:** every result prints a score out of 10 with a label — `[HIGH confidence]` (8.0+), `[MEDIUM confidence]` (6.0–7.9), or `[LOW confidence]` (below 6.0) — so you can immediately see how well the system matched the request.
-    - **Human evaluation:** 6 adversarial profiles were run manually through the CLI to probe edge cases (ghost genre, out-of-range values, empty strings, contradictory inputs). Results were inspected by hand to verify the system behaved as expected.
-    - **Error handling:** empty genre/mood strings and out-of-range values (e.g. energy = 1.5) do not crash the system — results still return, and the confidence label will show `LOW` when the match is poor.
+## Reliability & Testing Summary
 
-- AI Reflection:
-    - Some limitations in our system is the fact that it is local 
+- **Automated tests:** 10 unit tests across `test_retriever.py` (8 tests) and `test_recommender.py` (2 tests) — all passing. Tests cover candidate count, genre surfacing, Jaccard ordering, edge cases (empty genre, out-of-range inputs), and scorer output.
+- **Confidence scoring:** every result prints a score out of 10 with a label — `[HIGH confidence]` (8.0+), `[MEDIUM confidence]` (6.0–7.9), or `[LOW confidence]` (below 6.0) — so you can immediately see how well the system matched the request.
+- **Human evaluation:** 6 adversarial profiles were run manually through the CLI to probe edge cases (ghost genre, out-of-range values, empty strings, contradictory inputs). Results were inspected by hand to verify the system behaved as expected.
+- **Error handling:** empty genre/mood strings and out-of-range values (e.g. energy = 1.5) do not crash the system — results still return, and the confidence label will show `LOW` when the match is poor.
 
-    **What are the limitations or biases in your system?**
-    The biggest limitation is that this is a rule-based RAG system — it can match patterns, but it cannot make complex decisions. It doesn't understand that "relaxed" and "chill" mean nearly the same thing, or that a jazz song might feel right to someone who asked for lofi. Every decision comes down to tag overlap and weighted math, so it can only be as good as the data and rules we give it. The clearest bias is genre dominance — even after lowering the genre weight, a mediocre song in the right genre often still beats a great song in the wrong genre. There is also a catalog skew bias: genres like k-pop, classical, and country have far fewer songs than lofi or pop, so users with those preferences consistently get lower confidence scores — not because the system failed, but because there simply weren't enough matching songs to choose from.
+## AI Reflection
 
-    **Could your AI be misused, and how would you prevent that?**
-    This system is unlikely to cause serious harm — it recommends songs, not medical advice or financial decisions. The most realistic misuse would be trusting a `[HIGH confidence]` label on a result that doesn't actually match what the user wanted, because the score is based on our weights, not real user satisfaction. Someone could take that label at face value and trust it more than they should. The fix is improving the underlying scoring: better weights, a larger catalog, and fuzzy mood matching so near-synonyms get partial credit. Adding user feedback — letting the listener rate results — would also help catch cases where the system is confidently wrong.
+Some limitations in our system is the fact that it is local.
 
-    **What surprised you while testing your AI's reliability?**
-    The most surprising thing was how often the AI I was using to build this system would suggest something that would make the code less reliable — and then catch itself and acknowledge it. For example, it would propose a feature, note that it could produce negative scores with out-of-range inputs, and then either fix it or flag it as a known issue. That back-and-forth made me realize that AI tools are not just "correct or wrong" — they reason through trade-offs in real time, and the reasoning is just as important as the output. It changed how I think about reliability: it's not about never making mistakes, it's about catching them and being transparent about what the system can and can't do.
+**What are the limitations or biases in your system?**
+
+The biggest limitation is that this is a rule-based RAG system — it can match patterns, but it cannot make complex decisions. It doesn't understand that "relaxed" and "chill" mean nearly the same thing, or that a jazz song might feel right to someone who asked for lofi. Every decision comes down to tag overlap and weighted math, so it can only be as good as the data and rules we give it. The clearest bias is genre dominance — even after lowering the genre weight, a mediocre song in the right genre often still beats a great song in the wrong genre. There is also a catalog skew bias: genres like k-pop, classical, and country have far fewer songs than lofi or pop, so users with those preferences consistently get lower confidence scores — not because the system failed, but because there simply weren't enough matching songs to choose from.
+
+**Could your AI be misused, and how would you prevent that?**
+
+This system is unlikely to cause serious harm — it recommends songs, not medical advice or financial decisions. The most realistic misuse would be trusting a `[HIGH confidence]` label on a result that doesn't actually match what the user wanted, because the score is based on our weights, not real user satisfaction. Someone could take that label at face value and trust it more than they should. The fix is improving the underlying scoring: better weights, a larger catalog, and fuzzy mood matching so near-synonyms get partial credit. Adding user feedback — letting the listener rate results — would also help catch cases where the system is confidently wrong.
+
+**What surprised you while testing your AI's reliability?**
+
+The most surprising thing was how often the AI I was using to build this system would suggest something that would make the code less reliable — and then catch itself and acknowledge it. For example, it would propose a feature, note that it could produce negative scores with out-of-range inputs, and then either fix it or flag it as a known issue. That back-and-forth made me realize that AI tools are not just "correct or wrong" — they reason through trade-offs in real time, and the reasoning is just as important as the output. It changed how I think about reliability: it's not about never making mistakes, it's about catching them and being transparent about what the system can and can't do.
 
 
 ### Reflection: 
