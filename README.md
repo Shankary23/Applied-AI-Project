@@ -10,6 +10,12 @@ Ryan Shankar
 
 
 
+## Demo
+
+[Watch the full system walkthrough on Loom](https://www.loom.com/share/2e903912787540ceb21e2b49891252f3)
+
+---
+
 - Setup Instructions:
 
 ### 1. Go to the project folder
