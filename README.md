@@ -307,6 +307,8 @@ flowchart TD
     - **Human evaluation:** 6 adversarial profiles were run manually through the CLI to probe edge cases (ghost genre, out-of-range values, empty strings, contradictory inputs). Results were inspected by hand to verify the system behaved as expected.
     - **Error handling:** empty genre/mood strings and out-of-range values (e.g. energy = 1.5) do not crash the system — results still return, and the confidence label will show `LOW` when the match is poor.
 
+- AI Reflection:
+    - Some limitations in our system is the fact that it is local 
 
 
 ### Reflection: 
