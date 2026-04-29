@@ -1,11 +1,14 @@
 Ryan Shankar
 
-- Original Project: Music recomender Simulation
-    - The music recommenders goals were to goals were to:
-        - Help identify songs that were similar to each other, to recommened similar song to the user
-        - Create a realistic point system using different features as different weights prioritizing the ones that mattered most to the user, or in this case the creator, since we had some part in the decision of what features to prioriztize.
-- The system diagram below, covers how the whole updated recommender works:
-    - It takes user input, then places it in the RAG pipeline to get scores for the user's prefrences. Finally it outputs the top 5 songs and gives a reason.
+# Song Seeker 2.0
+
+## Original Project: Music Recommender Simulation
+
+The music recommender's goals were to help identify songs that were similar to each other, to recommend similar songs to the user, and to create a realistic point system using different features as different weights, prioritizing the ones that mattered most to the user.
+
+## System Overview
+
+The system diagram below covers how the whole updated recommender works. It takes user input, then places it in the RAG pipeline to get scores for the user's preferences. Finally it outputs the top 5 songs and gives a reason.
 
 
 
