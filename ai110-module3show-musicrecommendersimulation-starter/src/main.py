@@ -82,8 +82,14 @@ def main() -> None:
         print(divider)
 
         for rank, (song, score, explanation) in enumerate(recommendations, start=1):
+            if score >= 8.0:
+                confidence = "HIGH"
+            elif score >= 6.0:
+                confidence = "MEDIUM"
+            else:
+                confidence = "LOW"
             print(f"\n  #{rank}  {song['title']} by {song['artist']}")
-            print(f"       Score: {score:.2f}")
+            print(f"       Score: {score:.2f}/10  [{confidence} confidence]")
             print(f"       Why:")
             for reason in explanation.split(", "):
                 print(f"         - {reason}")

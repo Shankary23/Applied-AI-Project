@@ -8,6 +8,8 @@ Ryan Shankar
     - It takes user input, then places it in the RAG pipeline to get scores for the user's prefrences. Finally it outputs the top 5 songs and gives a reason.
 
 
+
+
 - Setup Instructions:
 
 ### 1. Go to the project folder
@@ -299,7 +301,11 @@ flowchart TD
 | Automated Evaluator | `tests/` | pytest runs 10 tests that validate retriever correctness and scorer output |
 | Human Evaluator | — | You run the app, read the printed results, and decide whether to adjust weights or add songs |
 
-
+- Reliability & Testing Summary:
+    - **Automated tests:** 10 unit tests across `test_retriever.py` (8 tests) and `test_recommender.py` (2 tests) — all passing. Tests cover candidate count, genre surfacing, Jaccard ordering, edge cases (empty genre, out-of-range inputs), and scorer output.
+    - **Confidence scoring:** every result prints a score out of 10 with a label — `[HIGH confidence]` (8.0+), `[MEDIUM confidence]` (6.0–7.9), or `[LOW confidence]` (below 6.0) — so you can immediately see how well the system matched the request.
+    - **Human evaluation:** 6 adversarial profiles were run manually through the CLI to probe edge cases (ghost genre, out-of-range values, empty strings, contradictory inputs). Results were inspected by hand to verify the system behaved as expected.
+    - **Error handling:** empty genre/mood strings and out-of-range values (e.g. energy = 1.5) do not crash the system — results still return, and the confidence label will show `LOW` when the match is poor.
 
 
 
