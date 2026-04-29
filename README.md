@@ -252,6 +252,9 @@ Pulling live data from the Spotify or Last.fm API would give a realistic catalog
 
 ---
 
+
+
+
 # Music Recommender — System Diagram
 
 ```mermaid
@@ -295,3 +298,10 @@ flowchart TD
 | Scorer | `src/recommender.py` | RAG step 2 — weighted algorithm ranks 15 candidates, returns top 5 with explanations |
 | Automated Evaluator | `tests/` | pytest runs 10 tests that validate retriever correctness and scorer output |
 | Human Evaluator | — | You run the app, read the printed results, and decide whether to adjust weights or add songs |
+
+
+
+
+
+### Reflection: 
+- This project taught me about how powerful AI as a tool can be. I tried not to rely on AI too much, but this course has shown me that if we know the decisions and ideas before prompting we can understand the outputs of the AI models better and further improve our code and project. It is a very effective tool when used as we did in this course. I also learned that it is not perfect. Many of our projects became complex and whether it was due to hallucinations or context windows, the AI models suggestions would be more deterimental than helpful. So blindly relying on it could take you further away from the goal that towards it. Overall it was a great and informative experience, and I learned many things about AI, both concepts and how to better utilize models themselves.
