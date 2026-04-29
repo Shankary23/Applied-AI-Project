@@ -47,6 +47,111 @@ You should see **10 passed** — 2 tests for the scorer and 8 tests for the retr
 
 
 
+---
+
+## Sample Interactions
+
+### Example 1 — Clean match (lofi, chill, medium energy)
+
+**Input:**
+| Field | Value |
+|---|---|
+| Genre | lofi |
+| Mood | chill |
+| Energy | 0.5 |
+| Danceability | 0.5 |
+| Acousticness | 0.5 |
+
+**Output (top 3):**
+```
+#1  Midnight Coding by LoRoom         Score: 9.19
+      - genre matches (lofi): +1.5 pts
+      - mood matches (chill): +1.5 pts
+      - energy close match (0.42): +3.68 pts
+      - danceability close match (0.62): +1.32 pts
+
+#2  Afternoon Haze by Paper Lanterns  Score: 8.89
+      - genre matches (lofi): +1.5 pts
+      - mood matches (chill): +1.5 pts
+      - energy close match (0.38): +3.52 pts
+      - danceability close match (0.60): +1.35 pts
+
+#3  Library Rain by Paper Lanterns    Score: 8.74
+      - genre matches (lofi): +1.5 pts
+      - mood matches (chill): +1.5 pts
+      - danceability close match (0.58): +1.38 pts
+```
+> When genre and mood both match, scores are high (8–9+ range) and results are very focused.
+
+---
+
+### Example 2 — Mood mismatch (pop + sad, but high energy)
+
+**Input:**
+| Field | Value |
+|---|---|
+| Genre | pop |
+| Mood | sad |
+| Energy | 0.9 |
+| Danceability | 0.85 |
+| Acousticness | 0.2 |
+
+**Output (top 3):**
+```
+#1  Golden Disco by Prism Era   Score: 8.12
+      - genre matches (pop): +1.5 pts
+      - energy close match (0.87): +3.88 pts
+      - danceability close match (0.90): +1.42 pts
+      - acousticness close match (0.08): +1.32 pts
+
+#2  Gym Hero by Max Pulse       Score: 8.11
+      - genre matches (pop): +1.5 pts
+      - energy close match (0.93): +3.88 pts
+      - danceability close match (0.88): +1.46 pts
+
+#3  Sunrise City by Neon Echo   Score: 8.06
+      - genre matches (pop): +1.5 pts
+      - energy close match (0.82): +3.68 pts
+      - danceability close match (0.79): +1.41 pts
+```
+> No songs in the catalog are "pop + sad", so the mood bonus never fires. The system falls back to genre and energy matches — showing the all-or-nothing mood bias documented in the model card.
+
+---
+
+### Example 3 — Ghost genre (k-pop not in catalog)
+
+**Input:**
+| Field | Value |
+|---|---|
+| Genre | k-pop |
+| Mood | happy |
+| Energy | 0.8 |
+| Danceability | 0.85 |
+| Acousticness | 0.2 |
+
+**Output (top 3):**
+```
+#1  Pink Confetti by Sugarcoat      Score: 8.34
+      - mood matches (happy): +1.5 pts
+      - energy close match (0.79): +3.96 pts
+      - danceability close match (0.85): +1.50 pts
+      - acousticness close match (0.12): +1.38 pts
+
+#2  Sunrise City by Neon Echo       Score: 8.30
+      - mood matches (happy): +1.5 pts
+      - energy close match (0.82): +3.92 pts
+      - danceability close match (0.79): +1.41 pts
+      - acousticness close match (0.18): +1.47 pts
+
+#3  Rooftop Lights by Indigo Parade Score: 8.07
+      - mood matches (happy): +1.5 pts
+      - energy close match (0.76): +3.84 pts
+      - danceability close match (0.82): +1.46 pts
+```
+> k-pop has zero songs in the catalog so the genre bonus never fires, but the system still returns strong results by matching on mood and continuous features. Scores are slightly lower (8.3 vs 9.2) because the 1.5 pt genre bonus is always missing.
+
+---
+
 # Music Recommender — System Diagram
 
 ```mermaid
