@@ -152,13 +152,67 @@ You should see **10 passed** — 2 tests for the scorer and 8 tests for the retr
 
 ---
 
-## Design Decisions
+## Testing Summary
+
+### What we tested
+
+The project has two layers of testing: **automated unit tests** (pytest) and **manual adversarial profiles** run through the CLI.
+
+**Automated tests — 10 total, all passing**
+
+| Test file | Tests | What they check |
+|---|---|---|
+| `test_retriever.py` | 8 | Candidate count, catalog-size cap, genre surfacing, Jaccard ordering, empty genre edge case, Jaccard math (perfect/zero/empty overlap) |
+| `test_recommender.py` | 2 | Top result matches expected genre/mood, explanation string is non-empty |
+
+**Adversarial CLI profiles — 6 hand-crafted edge cases**
+
+| Profile | What it probes |
+|---|---|
+| Contradictory categorical + continuous | Genre matches but mood doesn't — does energy still dominate? |
+| Out-of-range target values | Energy 1.5 and acousticness −0.2 — does the math break? |
+| Ghost genre (k-pop) | Genre not in catalog — does the system crash or degrade gracefully? |
+| Maximally contradictory continuous | Classical/melancholic user asking for energy 1.0 and danceability 1.0 |
+| Perfectly centered user | All targets at 0.5 — does the system pick something reasonable? |
+| Empty genre and mood | Blank strings — does anything crash? |
+
+---
+
+### What worked
+
+- **All 10 automated tests pass** with no failures or warnings.
+- **Empty and missing genre/mood strings** are handled gracefully — the retriever skips them and falls back to matching on continuous feature buckets only.
+- **Ghost genre** (k-pop, which has no songs in the catalog) does not crash the system. It simply never awards the genre bonus and still returns 5 relevant results based on mood and energy.
+- **The RAG retrieval step** consistently surfaces the right genre cluster at the top of the candidate list, which means the scorer only has to break ties — not search the whole catalog.
+- **Proximity scoring** for continuous features (energy, danceability, acousticness) worked well — near-matches get meaningful partial credit rather than being penalized the same as poor matches.
+
+---
+
+### What didn't work
+
+- **Out-of-range inputs produce negative score contributions.** When a user sets energy to 1.5 or acousticness to −0.2, the formula `1 - |delta|` returns a negative number, dragging the total score down. The system doesn't crash, but the scores are misleading. A clamping fix (`max(0, ...)`) would prevent this.
+- **Mood is all-or-nothing.** In the contradictory profile (pop + sad), no pop songs in the catalog are tagged "sad", so the mood bonus never fires. The system falls back entirely to genre and energy. Two moods that feel similar to a listener ("relaxed" vs "chill") score the same as two opposite moods.
+- **Small catalog limits underrepresented genres.** Users asking for k-pop, country, or classical always get lower top scores because fewer songs exist to match them — not because those preferences are hard to satisfy.
+- **No cross-genre discovery.** Because genre is still worth 1.5 pts on an exact match, a perfect-energy song in the wrong genre almost always ranks below an average song in the right genre.
+
+---
+
+### What I learned
+
+- **Testing edge cases revealed real bugs.** The out-of-range score bug was only visible because an adversarial profile deliberately pushed energy to 1.5 — a normal user test would never catch it.
+- **The retrieval step changes what gets scored, not just how fast.** By filtering to 15 candidates first, the RAG pipeline means some songs never reach the scorer at all. This made us more careful about what the retriever prioritizes.
+- **Weights are the hardest part to get right.** Changing energy from 2.0 to 4.0 pts noticeably shifted results away from genre-dominant picks. Small weight changes have outsized effects on which song lands at #1 vs #5, and there is no objectively "correct" answer — it depends on what the user actually values.
+- **Transparency helps evaluation.** Because every result prints a per-criterion breakdown ("genre matches: +1.5 pts"), it was easy to see exactly why the system made each choice and where the scoring logic was falling short.
+
+---
+
+
 
 ### 1. Why RAG instead of scoring every song directly
 
 The original system scored all songs in the catalog every time a user made a request. That works fine at 19 songs, but it doesn't scale — at 10,000 songs you'd be running the full weighted algorithm on every single entry. The RAG approach adds a cheap **retrieval step first**: convert each song and the user's query into a small set of tags, rank by tag overlap (Jaccard similarity), and only pass the top 15 candidates to the scorer.
 
-**Trade-off:** The retrieval step could theoretically filter out a great song before it ever gets scored. For example, if a user asks for lofi but a jazz song happens to have the perfect energy and danceability, it might not make the candidate list. We accepted this trade-off because the retriever uses the same features the scorer uses, so a song with zero tag overlap is very unlikely to score well anyway.
+**Trade-off:** The retrieval step could theoretically filter out a great song before it ever gets scored. For example, if a user asks for lofi but a jazz song happens to have the perfect energy and danceability, it might not make the candidate list. I accepted this trade-off because the retriever uses the same features the scorer uses, so a song with zero tag overlap is very unlikely to score well anyway.
 
 ---
 
