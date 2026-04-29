@@ -152,6 +152,52 @@ You should see **10 passed** — 2 tests for the scorer and 8 tests for the retr
 
 ---
 
+## Design Decisions
+
+### 1. Why RAG instead of scoring every song directly
+
+The original system scored all songs in the catalog every time a user made a request. That works fine at 19 songs, but it doesn't scale — at 10,000 songs you'd be running the full weighted algorithm on every single entry. The RAG approach adds a cheap **retrieval step first**: convert each song and the user's query into a small set of tags, rank by tag overlap (Jaccard similarity), and only pass the top 15 candidates to the scorer.
+
+**Trade-off:** The retrieval step could theoretically filter out a great song before it ever gets scored. For example, if a user asks for lofi but a jazz song happens to have the perfect energy and danceability, it might not make the candidate list. We accepted this trade-off because the retriever uses the same features the scorer uses, so a song with zero tag overlap is very unlikely to score well anyway.
+
+---
+
+### 2. Why Jaccard similarity for retrieval instead of vector embeddings
+
+A more advanced retrieval step would convert songs into numeric vectors using a model like `sentence-transformers` and rank by cosine similarity. That would be more accurate but requires an external ML library, a model download, and significant compute for a 59-song catalog.
+
+Jaccard similarity on hand-crafted tags (genre, mood, energy bucket, danceability bucket, acousticness bucket) is fast, transparent, and needs no dependencies beyond Python. You can read the tag sets and immediately understand why a song was retrieved.
+
+**Trade-off:** Jaccard treats all tags as equally important and can't capture nuance (e.g., "relaxed" and "chill" have zero overlap even though they're similar moods). Embeddings would handle that, but at the cost of explainability and setup complexity.
+
+---
+
+### 3. Why exact match for genre and mood, but proximity scoring for energy/danceability/acousticness
+
+Genre and mood are categorical — there's no meaningful middle ground between "rock" and "jazz". Giving partial credit for a wrong genre would make the results less predictable and harder to explain.
+
+Energy, danceability, and acousticness are continuous values (0.0–1.0). A song with energy 0.79 when you asked for 0.8 is almost perfect — it shouldn't be punished the same as a song with energy 0.2. Using `1 - |delta|` gives smooth partial credit and rewards near-matches.
+
+**Trade-off:** The all-or-nothing mood scoring is the biggest documented bias in the system. Two moods that feel nearly the same to a listener ("relaxed" and "chill") score identically to two moods that are completely opposite ("happy" and "sad").
+
+---
+
+### 4. Why energy has the highest weight (4.0 out of 10 pts)
+
+The original weights gave genre the most influence (3.0 pts). After testing, genre dominance meant that a mediocre same-genre song almost always outranked a much better cross-genre song. Energy was raised to 4.0 because how hard or soft a song hits is the most immediate, moment-to-moment feeling a listener notices — more so than genre label.
+
+**Trade-off:** Users who care deeply about genre over feel may find results surprising. This weight is a judgment call and could easily be tuned differently depending on the use case.
+
+---
+
+### 5. Why 59 songs instead of a real API
+
+Pulling live data from the Spotify or Last.fm API would give a realistic catalog of millions of songs, but it adds authentication, rate limits, network dependency, and parsing complexity. A static CSV keeps the project self-contained, reproducible, and easy to grade.
+
+**Trade-off:** The small catalog means some genres (e.g., k-pop, country) are underrepresented, which makes those user profiles consistently score lower — a known limitation documented in the model card.
+
+---
+
 # Music Recommender — System Diagram
 
 ```mermaid
